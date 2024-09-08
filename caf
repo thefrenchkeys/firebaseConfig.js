@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commander un Café Virtuel</title>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+  <script src="firebaseConfig.js"></script> <!-- Ton fichier de config Firebase -->
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .menu {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    button {
+      padding: 10px;
+      margin: 5px;
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3498db;
+    }
+  </style>
+</head>
+<body>
+  <div class="menu">
+    <h3>Menu du Café</h3>
+    <button onclick="order('café')">Café</button>
+    <button onclick="order('croissant')">Croissant</button>
+    <button onclick="order('l\'addition')">L'Addition</button>
+  </div>
+
+  <a-scene>
+    <a-sky color="#ECECEC"></a-sky>
+    <a-box position="0 0.5 -3" rotation="0 45 0" width="1" depth="2" height="0.1" color="#7f8c8d"></a-box>
+    <a-cylinder position="0 0.7 -3" radius="0.2" height="0.4" color="#d35400" id="coffeeCup"></a-cylinder>
+    <a-entity position="1 1 -3" id="server" text="value: Bonjour! Que voulez-vous commander?; width: 3"></a-entity>
+  </a-scene>
+
+  <script>
+    // Commande avec clic sur un bouton
+    function order(item) {
+      document.querySelector("#server").setAttribute("text", "value: Vous avez commandé un " + item + ".");
+      saveOrder(item);
+    }
+
+    // Fonction pour enregistrer la commande dans Firebase
+    function saveOrder(item) {
+      db.collection("orders").add({
+        item: item,
+        timestamp: new Date()
+      }).then(() => {
+        console.log("Commande enregistrée :", item);
+      }).catch((error) => {
+        console.error("Erreur lors de l'enregistrement :", error);
+      });
+    }
+
+    // Reconnaissance vocale
+    var recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = 'fr-FR';
+
+    recognition.onresult = function(event) {
+      var speechResult = event.results[0][0].transcript;
+      alert('Vous avez dit : ' + speechResult);
+
+      if (speechResult.includes('café')) {
+        order('café');
+      } else if (speechResult.includes('croissant')) {
+        order('croissant');
+      } else if (speechResult.includes('addition')) {
+        order('l\'addition');
+      } else {
+        alert("Je n'ai pas compris votre commande.");
+      }
+    };
+
+    // Démarrer la reconnaissance vocale
+    function startRecognition() {
+      recognition.start();
+    }
+
+    // Lancer la reconnaissance vocale après 5 secondes
+    setTimeout(startRecognition, 5000);
+  </script>
+</body>
+</html>
